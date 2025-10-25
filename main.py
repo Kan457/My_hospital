@@ -1,38 +1,55 @@
 import json
 import random
 
-Hospital_patient = [] # Список пациентов в больнице
-class Generator_ID:
-    def get_id():
-        pass
-
-class Polis(Generator_ID):
+class Generate():
     _lst_ids = []
-    def get_id():
-        while (id := random.randint(10 ** 3, 10 ** 4 - 1)) not in Polis._lst_ids:
-            return id
+    def get_polis():
+        while (polis := random.randint(10 ** 3, 10 ** 4 - 1)) not in Generate._lst_ids:
+            return polis
 
+#--------------ПОЛИС-------------
+class Polis:
+    all_polis = []
+    def __init__(self,data : str , status : str ):
+        self.data = data
+        self.status = status
+        self.polic = Generate.get_polis()
+    
+    def show_polic(self):
+        return self.polic
 
+    def to_dict(self):
+        return {
+          'Дата создания полиса : ': self.data,
+        }
 #--------------Пациент-----------
-# Пациент - чел, у которого есть полис 
 class Patient:
     def __init__(self, polic : int , name : str, gender : str , age : str):
         self.polic = polic
         self.name = name
         self.gender = gender
         self.age = age
-        
-    def checking_policy(self, polic : int , object : "Patient"):
-        if polic=="":
+
+    # Пациент - чел, у которого есть полис 
+    def checking_policy(self, hospital : "Hospital"): #проверка наличия полиса
+        if self.polic is None:
             print("Полис отсутсвует! Нужно создать ?")
             request = input("Да/Нет")
+
             if request=="Да":
-                #create_policy - создание полиса
-                ...
-            else:
-                s = f"Объект {self.object} удален :(((( "
-                del object
+                self.polic = Polis.create_polic()
+                hospital.add_patient(self.polic)
+                return "Полис создан! Пациент добавлен"
+            
+            if request=="Нет":
+                s = f"Объект {self.patient} удален :(((( "
+                hospital.remove_patient(self.patient)
                 return s
+            
+            else:
+                print("Информация не распознана!")
+                return self.checking_policy(hospital)
+
             
     def to_dict(self):
         return {
@@ -44,14 +61,19 @@ class Patient:
     
 #--------------Больница-----------
 class Hospital:
-    def __init__(self, name : str , addres : str , chief_medical : str , mail : str, 
-                 patient_dict : dict[Patient, Polis]):
+    def __init__(self, name : str , addres : str , chief_medical : str , mail : str):
         self.name = name
         self.addres = addres
         self.chief_medical = chief_medical
         self.mail = mail
-        self.patient_dict = patient_dict # ИФО - id
-    
+        self.hospital_patient : list[Patient] = [] # Список пациентов в больнице
+
+    def add_patient(self, patient : Patient):
+            self.hospital_patient.append(patient)
+
+    def remove_patient(self, patient : Patient):
+            self.hospital_patient.remove(patient)
+
     def hocpital_info(self):
         return f"Название: {self.name}\nАдрес: {self.addres}\nГлавный врач: {self.chief_medical}\nПочта: {self.mail}"
         
@@ -63,9 +85,4 @@ class Hospital:
         'Mail.ru': self.mail,
         }
     
-#--------------------------------
-    
-hospital1 = Hospital("Bolnica", "addres0", "afasf", "ilyaer@dgf", {Patient("sdg", "m", 18) : Polis.get_id(),
-                                                                   Patient("sdgd", "m", 19) : Polis.get_id(),
-                                                                   Patient("sdget", "m", 20) : Polis.get_id()})
-/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*
+#-------------Создание объектов----------------
