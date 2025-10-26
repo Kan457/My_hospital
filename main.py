@@ -68,82 +68,7 @@ class Diagnosis:
           'Дата' : self.date_create,
           'Комментарий': self.comment,
         }
-#--------------Медицинская карта----------
-class Medical_card:
-    def __init__(self,number , health_group , date_of_creation, diagnosis , patient : Patient):
-        self.number = number
-        self.health_group = health_group
-        self.date_of_creation = date_of_creation
-        self.diagnosis = diagnosis
-        self.name = patient.name
-        self.addres = patient.addres
-        self.chief_medical = patient.chief_medical
-        self.mail = patient.mail
 
-    def add_diagnosis(self, diagnos : Diagnosis):
-        self.name = diagnos.name
-        self.date_create = diagnos.date_create
-        self.comment = diagnos.comment
-
-    def show_info(self):
-        return {
-            'Полис' : self.name,
-            'Адресс' : self.addres,
-            'Главный врач' : self.chief_medical,
-            'Mail.ru' : self.mail,
-            'Полис': self.polic,
-            'ФИО' : self.name,
-            'Пол': self.gender,
-            'Возраст': self.age,
-        }
-    def to_dict(self):
-        return {
-          'Полис': self.polic,
-          'ФИО' : self.name,
-          'Пол': self.gender,
-          'Возраст': self.age,
-        }
-
-#--------------Пациент-----------
-class Patient:
-    def __init__(self, polis : int , name : str, gender : str , age : str):
-        self.polis = polis
-        self.name = name
-        self.gender = gender
-        self.age = age
-
-    # Пациент - чел, у которого есть полис 
-    #проверка наличия полиса
-
-    def checking_policy(self, hospital : "Hospital"): 
-        if self.polis is None:
-            print("Полис отсутсвует! Нужно создать ?")
-            request = input("Да/Нет")
-
-            if request=="Да":
-                self.polis = Polis.show_polic()
-                hospital.add_patient(self.polis)
-                return "Полис создан! Пациент добавлен"
-            
-            if request=="Нет":
-                s = f"Объект {self.patient} удален :(((( "
-                hospital.remove_patient(self.patient)
-                return s
-            
-            else:
-                print("Информация не распознана!")
-                return self.checking_policy(hospital)
-            
-    def show_medcard(self,):
-        ...
-            
-    def to_dict(self):
-        return {
-          'Policy': self.polis,
-          'ФИО' : self.name,
-          'Пол': self.gender,
-          'Возраст': self.age,
-        }
 #--------------Больница-----------
 class Hospital:
     def __init__(self, name : str , addres : str , chief_medical : str , mail : str,doctor_dict: dict, patient_dict: dict):
@@ -151,23 +76,23 @@ class Hospital:
         self.addres = addres
         self.chief_medical = chief_medical
         self.mail = mail
-        self.patient = doctor_dict
-        self.doctor = patient_dict
+        self.doctor = doctor_dict     
+        self.patient = patient_dict 
 
     def watch_patient(self):
         print("Список пациентов:")
-        for name, number in Hospital.patient.items():
+        for name, number in self.patient.items():
             print(f"ФИО: {name} - ID: {number}")
 
     def add_patient(self):
-        self.polic = Generate.get_polis()
-        self.name = input("Введите ФИО: ").capitalize().strip()
-        Hospital.patient[self.name] = self.polic
-        print("Пациент создан! ")
+        polis = Generate.get_polis()
+        name_patient = input("Введите ФИО: ").capitalize().strip()
+        self.patient[name_patient] = polis
+        print(f"Пациент '{name_patient}' создан! (Полис: {polis})")
     
     def watch_doctor(self):
         print("\nСписок врачей:")
-        for spec, doctors in Hospital.doctor.items():
+        for spec, doctors in self.doctor.items():
             print(f"\nСпециальность : {spec}")
             for name in doctors.keys():
                 print(f" - {name} ")
@@ -179,10 +104,10 @@ class Hospital:
         new_id = Generate.get_code()
 
         # если специальности нет — создаём новую
-        if specialty not in Hospital.doctor:
-            Hospital.doctor[specialty] = {}
+        if specialty not in self.doctor:
+            self.doctor[specialty] = {}
 
-        Hospital.doctor[specialty][name] = new_id
+        self.doctor[specialty][name] = new_id
         print(f"Врач '{name}' ({specialty}) добавлен с ID {new_id}")
 
     def Work(self):#Нужно ли вам узнать о врачах или добавится в поликлинику
@@ -223,30 +148,144 @@ class Hospital:
     def choose_patient(self):#выбор чела для работы
         print("Выбирете пациента из списка: ")
         print("Список пациентов:")
-        for name, number in Hospital.patient.items():
+        for name, number in self.patient.items():
             print(f"ФИО: {name} - ID: {number}")
 
         object = input("\nВведите ID пациента: ")
 
-        for name, number in Hospital.patient.items():
+        for name, number in self.patient.items():
             if number == object:
                 print(f"Вы выбрали пациента: {name} (ID: {number})")
                 return name, number
 
         print("Пациент не найден. Повторите попытку снова")
-        self.choose_patient(self)
-        return None
+        return self.choose_patient()   # исправлено: раньше было self.choose_patient(self)
 
     def show_hocpital(self):#выведи инфу про поликлинику
         print(f"\nНазвание: {self.name}\nАдрес: {self.addres}\nГлавный врач: {self.chief_medical}\nПочта: {self.mail}")
         return True
+#--------------Пациент-----------
+class Patient:
+    def __init__(self,hospital : Hospital):
+        self.name = hospital.choose_patient[0]
+        self.polis = hospital.choose_patient[1]
     
+    #если попросит показать - покажем 
+    def show_medical_card(self, medical_card : dict):
+        print(f"Медицинская карта пациента {self.name} :")
+        Medical_card.show_medical_card(self.polis)
+    
+        
+
+    #пойти на прием - сравнить с записью и вписать направление или диагноз
+    def go_to_an_appointment(self):
+        ...
+    
+    def sign_up(self):
+        ...
+
+    def base_patient(self):
+        print("База пациентов:")
+        for polis, data in Patient.info_patient.items():
+            print(f"{polis} : {data}")
+#--------------Медицинская карта----------
+class Medical_card:
+    medical_cards = {
+        '0125': {
+            'ФИО' : 'Волков Александр Петрович', 
+            'Пол': 'мужской', 
+            'Дата рождения':'01.01.1988',
+            'Номер телефона' : '+7-987-456-01-02',
+            'Диагноз' : {
+                'Диагноз1' : 'Гастрит',
+            }
+        },
+        '3223': {
+            'ФИО' : 'Соколова Мария Игоревна', 
+            'Пол': 'женский', 
+            'Дата рождения':'27.03.2005',
+            'Номер телефона' : '+7-285-111-86-00',
+            'Диагноз' : {
+                'Диагноз1' : 'Перелом ноги',
+            }
+        },
+        '7777' : {
+            'ФИО' : 'Хомин Николай Сергеевич',
+            'Пол' : 'мужской',
+            'Дата' : '04.04.2004',
+            'Номер телефона' : '+7-444-400-00-78',
+            'Диагноз' : {
+                'Диагноз1' : 'Гастрит'
+            }
+        },
+    }
+    def __init__(self, number, gender , age, diagnosis , patient : Patient):
+        self.polis = patient.polis
+        self.name = patient.name
+        self.gender = gender
+        self.age = age
+        self.number = number
+        self.diagnosis = diagnosis
+
+    def create_medical_card(self,medical_cards):#name-id
+        for k in self.medical_cards.keys():
+            if self.polis==k:
+                print("Медицинская карта уже существует!:)")
+                return 
+            else: 
+                gender=input("Введите пол: (женский/мужской): ")
+                data = input("Введите дату рождения (02.04.2000): ")
+                phone = input("Введите номер телефона (+7-777-777-70-70): ")
+                diagnos = {}
+                medical_cards[self.polis] = {
+                    'ФИО' : self.name,
+                    'Пол' : gender,
+                    'Дата' : data,
+                    'Номер телефона' : phone,
+                    'Диагноз' : diagnos,
+                }
+
+    def add_diagnosis(self, patient : Patient ,diagnos : Diagnosis,medical_cards : dict):
+        self.all_keys = []
+        self.polis = patient.polis
+        self.name = diagnos.name
+        self.comment = diagnos.comment
+        for k in medical_cards.keys():
+            self.all_keys.append(k)
+        if self.name in self.all_keys:
+            print("Поименяйте название диагноза! ")
+        else:
+            medical_cards[self.polis][self.name] = self.comment
+            print("Диагноз записан в медкижку ")
+        return
+
+
+    def show_medical_card(self, polis: str, medical_cards: dict):
+        if polis not in medical_cards:
+            print(f"Карта с полисом {polis} не найдена.")
+            return
+
+        card = medical_cards[polis]
+        print(f"\nМедицинская карта пациента (полис {polis}):")
+        for key, value in card.items():
+            if isinstance(value, dict):  
+                print(f"  {key}:")
+                for sub_key, sub_value in value.items():
+                    print(f"    {sub_key}: {sub_value}")
+        else:
+            print(f"  {key}: {value}")
+
     def to_dict(self):
         return {
-        'Название' : self.name,
-        'Адресс': self.addres,
-        'Главный врач': self.chief_medical,
-        'Mail.ru': self.mail,
+          'Полис': self.polis,
+          'ФИО' : self.name,
+          'Пол': self.gender,
+          'Возраст': self.age,
+          'Телефон' : self.number,
+          'Диагноз' : self.diagnosis
+
         }
-    
+
 #-------------Создание объектов----------------
+if __name__ == "main":
+    pass
